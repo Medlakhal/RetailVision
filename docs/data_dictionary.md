@@ -1,0 +1,1 @@
+![Schéma des sources de données](C:\RetailVision\DATASOURCES.png)
