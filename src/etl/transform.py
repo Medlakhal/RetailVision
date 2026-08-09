@@ -19,10 +19,10 @@ def check_duplicates_rows(df):
 ## Doublons métier
 def check_duplicates_keys(df,key):
     """
-    Return the number of duplicated values for a business key.
+    Return the number of duplicated values for a business simple or composite key.
     """
 
-    return df[key].duplicated().sum()
+    return df.duplicated(subset=key).sum()
 
 #Vérifier les types de données
 def check_data_types(df):
@@ -46,7 +46,7 @@ def data_quality_report(data, primary_key):
 
     report = {
         "Rows": len(data),
-        "Columns": len(data),
+        "Columns": len(data.columns),
         "Missing Values Count": missing_count,
         "Duplicate Rows": check_duplicates_rows(data),
         "Duplicate Keys": duplicate_keys
@@ -63,6 +63,39 @@ def convert_datetime_columns(df,columns):
         df[col]=pd.to_datetime(df[col], errors='coerce')
     
     return df
+
+import unicodedata
+
+
+def normalize_text_columns(data, columns):
+    """
+    Standardize selected text columns.
+
+    Transformations:
+    1. Remove leading and trailing spaces.
+    2. Convert text to lowercase.
+    3. Remove accents.
+    """
+
+    cleaned_data = data.copy()
+
+    for column in columns:
+        cleaned_data[column] = (
+            cleaned_data[column]
+            .str.strip()
+            .str.lower()
+            .apply(
+                lambda value: "".join(
+                    char for char in unicodedata.normalize("NFKD", value)
+                    if not unicodedata.combining(char)
+                )
+                if isinstance(value, str)
+                else value
+            )
+        )
+
+    return cleaned_data
+
 
 # Nettoyer Les ordres
 def clean_orders(data):
@@ -82,3 +115,62 @@ def clean_orders(data):
 
     return cleaned_data
 
+def clean_products(data):
+    """
+    Clean the products dataset according to business rules.
+    Business Rule:
+    Products with a missing category are assigned to 'unknown'
+    to preserve them for BI analysis.
+    """
+
+    cleaned_data = data.copy()
+    cleaned_data["product_category_name"] = cleaned_data["product_category_name"].fillna("unknown")
+
+    return cleaned_data
+
+def clean_order_payments(data):
+    """
+    Clean the order payments dataset according to business rules.
+
+    Business Rule:
+    A payment with a positive value cannot have 0 installments.
+    In this case, it is considered a single-payment transaction.
+    """
+
+    cleaned_data = data.copy()
+
+    condition = (
+        (cleaned_data["payment_installments"] == 0)
+        & (cleaned_data["payment_value"] > 0)
+    )
+
+    cleaned_data.loc[condition, "payment_installments"] = 1
+    return cleaned_data
+
+def clean_order_reviews(data):
+    """
+    Clean the order reviews dataset according to business rules.
+
+    Business Rules:
+    1. Missing review titles are replaced with "No title".
+    2. Missing review messages are replaced with "No comment".
+    """
+    cleaned_data = data.copy()
+
+    cleaned_data["review_comment_title"] = cleaned_data["review_comment_title"].fillna("No title")
+    cleaned_data["review_comment_message"] = cleaned_data["review_comment_message"].fillna("No comment")
+    return cleaned_data
+
+def clean_geolocation(data):
+    """
+    Clean the geolocation dataset according to business rules.
+
+    Business Rule:
+    Geolocation records with missing latitude or longitude are removed.
+    """
+
+    # Pas besoin de copy() : drop_duplicates() retourne un nouveau DataFrame 
+    # On ne modifie pas directement data
+    cleaned_data = data.drop_duplicates()
+    return cleaned_data
+    
