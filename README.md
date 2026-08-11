@@ -82,7 +82,7 @@ These raw tables are the starting point of the pipeline and are progressively tr
 
 <div align="center">
 
-<img src="architecture.svg" alt="RetailVision Bronze-Silver-Gold Architecture Diagram" width="700"/>
+<img src="pipeline_diagram.png" alt="RetailVision Bronze-Silver-Gold Architecture Diagram" width="700"/>
 
 </div>
 
