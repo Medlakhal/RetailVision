@@ -1,72 +1,72 @@
 product_category_name,product_category_name_english
-beleza_saude,health_beauty
-informatica_acessorios,computers_accessories
-automotivo,auto
-cama_mesa_banho,bed_bath_table
-moveis_decoracao,furniture_decor
-esporte_lazer,sports_leisure
-perfumaria,perfumery
-utilidades_domesticas,housewares
-telefonia,telephony
-relogios_presentes,watches_gifts
-alimentos_bebidas,food_drink
-bebes,baby
-papelaria,stationery
-tablets_impressao_imagem,tablets_printing_image
-brinquedos,toys
-telefonia_fixa,fixed_telephony
-ferramentas_jardim,garden_tools
-fashion_bolsas_e_acessorios,fashion_bags_accessories
-eletroportateis,small_appliances
-consoles_games,consoles_games
-audio,audio
-fashion_calcados,fashion_shoes
-cool_stuff,cool_stuff
-malas_acessorios,luggage_accessories
-climatizacao,air_conditioning
-construcao_ferramentas_construcao,construction_tools_construction
-moveis_cozinha_area_de_servico_jantar_e_jardim,kitchen_dining_laundry_garden_furniture
-construcao_ferramentas_jardim,costruction_tools_garden
-fashion_roupa_masculina,fashion_male_clothing
-pet_shop,pet_shop
-moveis_escritorio,office_furniture
-market_place,market_place
-eletronicos,electronics
-eletrodomesticos,home_appliances
-artigos_de_festas,party_supplies
-casa_conforto,home_confort
-construcao_ferramentas_ferramentas,costruction_tools_tools
-agro_industria_e_comercio,agro_industry_and_commerce
-moveis_colchao_e_estofado,furniture_mattress_and_upholstery
-livros_tecnicos,books_technical
-casa_construcao,home_construction
-instrumentos_musicais,musical_instruments
-moveis_sala,furniture_living_room
-construcao_ferramentas_iluminacao,construction_tools_lights
-industria_comercio_e_negocios,industry_commerce_and_business
-alimentos,food
-artes,art
-moveis_quarto,furniture_bedroom
-livros_interesse_geral,books_general_interest
-construcao_ferramentas_seguranca,construction_tools_safety
-fashion_underwear_e_moda_praia,fashion_underwear_beach
-fashion_esporte,fashion_sport
-sinalizacao_e_seguranca,signaling_and_security
-pcs,computers
-artigos_de_natal,christmas_supplies
-fashion_roupa_feminina,fashio_female_clothing
-eletrodomesticos_2,home_appliances_2
-livros_importados,books_imported
-bebidas,drinks
-cine_foto,cine_photo
-la_cuisine,la_cuisine
-musica,music
-casa_conforto_2,home_comfort_2
-portateis_casa_forno_e_cafe,small_appliances_home_oven_and_coffee
-cds_dvds_musicais,cds_dvds_musicals
-dvds_blu_ray,dvds_blu_ray
-flores,flowers
-artes_e_artesanato,arts_and_craftmanship
-fraldas_higiene,diapers_and_hygiene
-fashion_roupa_infanto_juvenil,fashion_childrens_clothes
-seguros_e_servicos,security_and_services
+Santé et beauté,health_beauty
+Accessoires informatiques,computers_accessories
+Automobile,auto
+"Lits, salle de bain et table",bed_bath_table
+Meubles et décoration,furniture_decor
+Sports et loisirs,sports_leisure
+Parfumerie,perfumery
+Articles ménagers,housewares
+Téléphonie,telephony
+Montres et cadeaux,watches_gifts
+Alimentation et boissons,food_drink
+Bébé,baby
+Papeterie,stationery
+"Tablettes, impression et image",tablets_printing_image
+Jouets,toys
+Téléphonie fixe,fixed_telephony
+Outils de jardinage,garden_tools
+Mode : sacs et accessoires,fashion_bags_accessories
+Petits électroménagers,small_appliances
+Consoles et jeux vidéo,consoles_games
+Audio,audio
+Mode : chaussures,fashion_shoes
+Articles insolites,cool_stuff
+Bagages et accessoires,luggage_accessories
+Climatisation,air_conditioning
+Construction : outils de construction,construction_tools_construction
+"Mobilier : cuisine, salle à manger, buanderie et jardin",kitchen_dining_laundry_garden_furniture
+Construction : outils de jardin,costruction_tools_garden
+Mode : vêtements homme,fashion_male_clothing
+Animalerie,pet_shop
+Mobilier de bureau,office_furniture
+Place de marché,market_place
+Électronique,electronics
+Électroménager,home_appliances
+Fournitures pour fêtes,party_supplies
+Confort de la maison,home_confort
+Construction : outillage,costruction_tools_tools
+Agro-industrie et commerce,agro_industry_and_commerce
+"Meubles, matelas et tapissage",furniture_mattress_and_upholstery
+Livres techniques,books_technical
+Construction de maison,home_construction
+Instruments de musique,musical_instruments
+Mobilier de salon,furniture_living_room
+Construction : éclairage,construction_tools_lights
+"Industrie, commerce et affaires",industry_commerce_and_business
+Alimentation,food
+Art,art
+Mobilier de chambre,furniture_bedroom
+Livres d'intérêt général,books_general_interest
+Construction : équipements de sécurité,construction_tools_safety
+Mode : lingerie et plage,fashion_underwear_beach
+Mode : sportswear,fashion_sport
+Signalisation et sécurité,signaling_and_security
+Ordinateurs,computers
+Articles de Noël,christmas_supplies
+Mode : vêtements femme,fashio_female_clothing
+Électroménager 2,home_appliances_2
+Livres importés,books_imported
+Boissons,drinks
+Cinéma et photo,cine_photo
+La cuisine,la_cuisine
+Musique,music
+Confort de la maison 2,home_comfort_2
+Petits électroménagers : fours et cafetières,small_appliances_home_oven_and_coffee
+CDs et DVDs musicaux,cds_dvds_musicals
+DVDs et Blu-ray,dvds_blu_ray
+Fleurs,flowers
+Arts et artisanat,arts_and_craftmanship
+Couches et hygiène,diapers_and_hygiene
+Mode : vêtements pour enfants,fashion_childrens_clothes
+Sécurité et services,security_and_services

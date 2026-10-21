@@ -173,4 +173,49 @@ def clean_geolocation(data):
     # On ne modifie pas directement data
     cleaned_data = data.drop_duplicates()
     return cleaned_data
-    
+
+#   Traduire les catégories de produits en français
+def translate_product_categories(data, categories_fr):
+    """
+    Translate product categories from Portuguese to French.
+    Keep original values if no translation is found.
+    """
+    cleaned_data = data.copy()
+
+    cleaned_data["product_category_name"] = (
+        cleaned_data["product_category_name"]
+        .map(categories_fr)
+        .fillna(data["product_category_name"])
+    )
+
+    return cleaned_data
+
+
+
+# Décaler les dates pour que la dernière année corresponde à l'année de référence
+def shift_dates_to_recent(data, columns, reference_year=2026):
+    """
+    Recentre les dates pour que la dernière année
+    corresponde à l'année de référence.
+    """
+
+    cleaned_data = data.copy()
+
+    dates = cleaned_data[columns].stack()
+    dates = pd.to_datetime(dates, errors="coerce")
+
+    max_year = dates.dt.year.max()
+
+    year_shift = reference_year - max_year
+
+    for column in columns:
+        cleaned_data[column] = pd.to_datetime(
+            cleaned_data[column],
+            errors="coerce"
+        )
+
+        cleaned_data[column] = (
+            cleaned_data[column] + pd.DateOffset(years=year_shift)
+        )
+
+    return cleaned_data

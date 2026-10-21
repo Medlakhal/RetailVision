@@ -1,0 +1,186 @@
+RETAILVISION — BUSINESS ANALYSIS & KPI GUIDE
+=============================================
+
+Objectif
+--------
+Ce document présente les questions métier, les définitions des indicateurs,
+les requêtes utilisées et les précautions d'interprétation de RetailVision.
+Les résultats ci-dessous correspondent aux analyses exécutées dans le Data
+Warehouse PostgreSQL du projet.
+
+1. Principes d'analyse
+----------------------
+- Partir d'une question métier avant d'écrire une requête.
+- Comprendre le grain des données avant de compter ou d'agréger.
+- Utiliser COUNT(DISTINCT order_id) pour compter les commandes, car une
+  commande peut contenir plusieurs lignes d'articles.
+- Dans ce projet, sales_amount = price + freight_value.
+- Les dates de travail ont été décalées vers la période 2024–2026. Les
+  analyses temporelles utilisent cette chronologie transformée et ne doivent
+  pas être interprétées comme les dates originales du dataset Olist.
+- Vérifier les mois incomplets avant de comparer les performances.
+- Éviter les jointures directes entre la table de faits au grain article et
+  les paiements au grain paiement, car elles peuvent multiplier les lignes.
+- Présenter les limites des données avec les résultats.
+- Le chiffre d'affaires défini ici n'est ni un bénéfice, ni une mesure des
+  paiements réellement encaissés.
+
+2. Définition de la mesure principale
+-------------------------------------
+Mesure : sales_amount
+Définition projet : price + freight_value
+Interprétation : montant de l'article additionné aux frais de livraison
+associés à la ligne de vente.
+Limite : cette mesure ne prend pas en compte les coûts, les remboursements,
+les paiements effectivement encaissés ou la rentabilité.
+
+3. Catalogue des six analyses KPI
+---------------------------------
+
+KPI 1 — Évolution mensuelle des ventes
+Question métier :
+Comment évoluent le nombre de commandes et le chiffre d'affaires au fil des
+mois ?
+
+Mesures :
+- nombre_commandes : COUNT(DISTINCT order_id)
+- chiffre_affaires : SUM(sales_amount)
+
+Résultats observés :
+- Le chiffre d'affaires mensuel le plus élevé dans le résultat obtenu est
+  1 179 008,94 en novembre 2025.
+- Le plus grand nombre de commandes mensuelles affiché est 7 450 en
+  novembre 2025.
+
+Limites :
+- Certains mois ont très peu de lignes, notamment septembre 2024,
+  décembre 2024 et septembre 2026.
+- Il faut vérifier la couverture de ces périodes avant de conclure à une
+  baisse ou à une hausse réelle.
+
+KPI 2 — Croissance mensuelle du chiffre d'affaires
+Question métier :
+Quel est le pourcentage de variation du chiffre d'affaires par rapport au
+mois précédent disponible dans les résultats ?
+
+Définition :
+((CA courant - CA précédent) / CA précédent) * 100
+
+Méthode :
+Agrégation par mois, puis utilisation de LAG() pour récupérer le CA de la
+ligne mensuelle précédente.
+
+Limites :
+- LAG() compare au mois précédent présent dans le résultat, pas forcément
+  au mois calendaire immédiatement précédent si un mois est absent.
+- Les périodes partielles peuvent produire des variations trompeuses.
+- Septembre 2026 affiche un montant très faible dans les résultats actuels et
+  ne doit pas être interprété comme un effondrement des ventes sans vérifier
+  si le mois est complet.
+
+KPI 3 — Performance des produits
+Question métier :
+Quels produits génèrent le plus de chiffre d'affaires ?
+
+Mesures :
+- nombre_articles_vendus : nombre de lignes d'articles dans fact_ventes
+- nombre_commandes : nombre de commandes distinctes contenant le produit
+- chiffre_affaires : somme de sales_amount
+- ca_moyen_par_article : chiffre d'affaires / nombre de lignes d'articles
+
+Résultats observés :
+Le produit classé premier dans le résultat obtenu est associé à la catégorie
+« Santé et beauté », avec un chiffre d'affaires de 67 606,10.
+
+Limites :
+Le CA moyen par article inclut les frais de livraison via sales_amount.
+Il ne représente ni le prix du produit seul, ni une marge, ni un bénéfice.
+
+KPI 4 — Performance des vendeurs
+Question métier :
+Quels vendeurs contribuent le plus au chiffre d'affaires et au volume de
+commandes ?
+
+Mesures :
+- nombre_articles_vendus : nombre de lignes d'articles
+- nombre_commandes : nombre de commandes distinctes auxquelles le vendeur
+  a contribué
+- chiffre_affaires : somme de sales_amount attribuée aux lignes du vendeur
+- ca_moyen_par_article : chiffre d'affaires / nombre de lignes d'articles
+
+Limites :
+Une même commande peut contenir des articles de plusieurs vendeurs. Le nombre
+de commandes par vendeur ne doit donc pas être additionné pour obtenir un
+nombre global de commandes. Le classement mesure le CA, pas la rentabilité.
+
+KPI 5 — Répartition géographique des ventes par région du client
+Question métier :
+Quelles régions des clients contribuent le plus au nombre de commandes, au
+volume d'articles et au chiffre d'affaires ?
+
+Jointure :
+fact_ventes.customer_geo_key -> dim_geography.geography_key
+
+Résultats observés :
+- Sudeste : 67 638 commandes distinctes, 77 343 articles,
+  CA 10 223 096,40
+- Sul : 14 022 commandes, 16 128 articles, CA 2 293 966,77
+- Nordeste : 9 295 commandes, 10 361 articles, CA 1 870 846,47
+- Centro-Oeste : 5 559 commandes, 6 406 articles, CA 992 790,64
+- Norte : 1 831 commandes, 2 057 articles, CA 409 211,82
+- Unknown : 298 commandes, 331 articles, CA 50 113,64
+
+Interprétation :
+Sudeste représente environ 64,5 % du CA total observé dans fact_ventes.
+Cette analyse utilise la géographie du client, et non celle du vendeur.
+
+Limites :
+La catégorie Unknown doit rester visible afin de ne pas masquer les données
+géographiques non reconnues. La répartition décrit le dataset transformé et
+ne démontre pas à elle seule les causes des différences régionales.
+
+KPI 6 — Commandes par statut
+Question métier :
+Comment les commandes représentées dans la table de faits se répartissent-elles
+par statut ?
+
+Résultats observés :
+- delivered : 96 455 commandes, CA associé 15 416 246,25
+- shipped : 1 106 commandes, CA associé 177 129,34
+- canceled : 461 commandes, CA associé 105 885,72
+- invoiced : 312 commandes, CA associé 68 988,75
+- processing : 301 commandes, CA associé 69 394,11
+- unavailable : 6 commandes, CA associé 2 140,49
+- approved : 2 commandes, CA associé 241,08
+
+Limites :
+Les commandes comptées sont celles représentées dans fact_ventes. Le CA
+associé à un statut n'est pas nécessairement du revenu encaissé. Le nombre de
+commandes annulées ne suffit pas à définir un taux d'annulation fiable sans
+préciser la population de référence.
+
+4. Contrôles de cohérence liés aux KPI
+--------------------------------------
+- Somme du CA par région : 15 840 025,74.
+- Somme du CA par statut : 15 840 025,74.
+- Le total correspond au CA global précédemment vérifié dans fact_ventes.
+- Les commandes sont comptées avec COUNT(DISTINCT order_id), tandis que
+  COUNT(*) compte les lignes d'articles de commande.
+
+5. Fichier SQL associé
+----------------------
+Les requêtes SQL commentées des six KPI et un contrôle global se trouvent dans :
+sql/kpi/retailvision_kpi_guide.sql
+
+6. Statut et améliorations futures
+----------------------------------
+Statut : les six analyses KPI ont été exécutées et leurs résultats principaux
+ont été relevés.
+
+Améliorations possibles, non requises pour reproduire les KPI :
+- construire un calendrier complet pour traiter explicitement les mois absents ;
+- vérifier la complétude des mois aux extrémités de la période ;
+- analyser les commandes présentes dans la source mais absentes de fact_ventes ;
+- créer des visualisations ou un tableau de bord à partir des KPI validés ;
+- enrichir les indicateurs si des données fiables de paiement, remboursement
+  et coûts sont intégrées sans multiplier les lignes de vente.

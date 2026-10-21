@@ -1,0 +1,175 @@
+RETAILVISION — DATA WAREHOUSE VALIDATION
+========================================
+
+Objectif
+--------
+Ce document consigne les résultats connus du chargement et des contrôles de
+la table de faits PostgreSQL. Il décrit les tests effectivement réalisés et
+les limites identifiées. Il ne prétend pas que toutes les règles possibles de
+qualité des données ont été testées.
+
+1. Résultat du chargement
+-------------------------
+Table de faits : retailvision.fact_ventes
+Lignes d'articles dans Silver : 112 650
+Lignes chargées après correspondance avec les commandes : 112 626
+Lignes Silver sans commande correspondante : 24
+Chiffre d'affaires chargé : 15 840 025,74
+Définition de sales_amount : price + freight_value
+
+Le chargement a été signalé comme réussi.
+
+2. Résultats des contrôles SQL
+------------------------------
+Les contrôles suivants ont été exécutés sur fact_ventes :
+- Nombre total de lignes : 112 626
+- Valeurs date_key manquantes : 0
+- Valeurs customer_key manquantes : 0
+- Valeurs product_key manquantes : 0
+- Valeurs seller_key manquantes : 0
+- Groupes dupliqués pour (order_id, order_item_id) : 0
+- SUM(sales_amount) : 15 840 025,74
+
+Ces contrôles indiquent que le nombre de lignes chargées est cohérent avec le
+résultat attendu après la jointure utilisée, que les clés obligatoires testées
+sont renseignées et que la clé métier (order_id, order_item_id) est unique
+dans la table de faits.
+
+Ces tests ne prouvent pas à eux seuls que chaque clé étrangère référence la
+bonne ligne de dimension. La validation des contraintes et le contrôle des
+correspondances doivent être vérifiés séparément.
+
+3. Exceptions et limites connues
+--------------------------------
+
+A. Lignes sans commande correspondante
+24 lignes de Silver ne possédaient pas de commande correspondante dans le
+jeu de données des commandes. Le chargement utilise une jointure interne
+(INNER JOIN) avec les commandes ; ces 24 lignes n'ont donc pas été chargées.
+Cette différence doit être conservée dans le suivi et investiguée si une
+réconciliation complète avec la source est nécessaire.
+
+B. Géographies inconnues
+Le chargement a signalé 331 clés de géographie client et 2 535 clés de
+géographie vendeur associées au membre de géographie inconnu. Cela ne signifie
+pas que customer_key ou seller_key sont NULL : il s'agit de correspondances
+vers une géographie inconnue.
+Les analyses géographiques doivent conserver et quantifier ces cas.
+
+C. Dates transformées
+Les dates de travail du projet ont été décalées vers une chronologie 2024–2026.
+Les analyses mensuelles et annuelles se rapportent à cette chronologie
+transformée, et non nécessairement aux dates originales du dataset Olist.
+
+D. Définition du chiffre d'affaires
+sales_amount = price + freight_value est la mesure choisie pour ce projet.
+Elle ne doit pas être présentée comme une définition comptable universelle du
+revenu. Elle ne mesure ni le bénéfice ni les encaissements réels.
+
+E. Grain des paiements
+Les paiements peuvent contenir plusieurs lignes par commande et leur grain
+diffère de celui de la table de faits au niveau article. Une jointure directe
+sans agrégation préalable peut multiplier les lignes et gonfler les totaux.
+
+4. Correction du mapping des régions
+------------------------------------
+Constat initial :
+La colonne dim_geography.region était NULL pour les géographies réelles,
+car le code de construction de la dimension affectait explicitement None à
+cette colonne.
+
+Correction appliquée :
+Une mise à jour SQL a renseigné region à partir du code d'état brésilien
+(state), sans supprimer ni recréer les lignes de dim_geography. Les clés
+geography_key ont donc été préservées.
+
+Mapping utilisé :
+- Norte : AC, AP, AM, PA, RO, RR, TO
+- Nordeste : AL, BA, CE, MA, PB, PE, PI, RN, SE
+- Centro-Oeste : DF, GO, MS, MT
+- Sudeste : ES, MG, RJ, SP
+- Sul : PR, RS, SC
+
+Répartition vérifiée après mise à jour :
+- Sudeste : 10 200 géographies
+- Nordeste : 3 752 géographies
+- Sul : 2 842 géographies
+- Centro-Oeste : 1 947 géographies
+- Norte : 876 géographies
+- Unknown : 1 géographie
+
+Total : 19 618 géographies.
+
+Les KPI par région du client ont ensuite donné :
+- Sudeste : CA 10 223 096,40
+- Sul : CA 2 293 966,77
+- Nordeste : CA 1 870 846,47
+- Centro-Oeste : CA 992 790,64
+- Norte : CA 409 211,82
+- Unknown : CA 50 113,64
+
+Point de vigilance :
+Le code ETL actuel de construction de dim_geography affecte encore None à
+region. Si ce chargement est exécuté de nouveau, il peut remettre la colonne
+à NULL. La logique de mapping doit être intégrée au code ETL avant de
+considérer la correction comme entièrement automatisée. Éviter de relancer
+le chargement complet des dimensions sans vérifier les clés étrangères de
+fact_ventes : le chargeur supprime et recrée les dimensions.
+
+5. Contrôles SQL de revalidation
+--------------------------------
+Exécuter dans PostgreSQL avec la base retailvision_dw et le schéma retailvision
+sélectionnés.
+
+SET search_path TO retailvision;
+
+-- Nombre de lignes de la table de faits
+SELECT COUNT(*) AS total_lignes
+FROM fact_ventes;
+
+-- Nombre de groupes dupliqués pour la clé métier de la ligne de commande
+SELECT COUNT(*) AS nombre_de_groupes_dupliques
+FROM (
+    SELECT order_id, order_item_id
+    FROM fact_ventes
+    GROUP BY order_id, order_item_id
+    HAVING COUNT(*) > 1
+) AS doublons;
+
+-- Clés obligatoires testées et mesure globale
+SELECT
+    COUNT(*) AS total_lignes,
+    COUNT(*) FILTER (WHERE date_key IS NULL) AS dates_manquantes,
+    COUNT(*) FILTER (WHERE customer_key IS NULL) AS clients_manquants,
+    COUNT(*) FILTER (WHERE product_key IS NULL) AS produits_manquants,
+    COUNT(*) FILTER (WHERE seller_key IS NULL) AS vendeurs_manquants,
+    ROUND(SUM(sales_amount), 2) AS chiffre_affaires
+FROM fact_ventes;
+
+-- Répartition des régions après correction
+SELECT
+    COALESCE(region, 'Inconnue') AS region,
+    COUNT(*) AS nombre_geographies
+FROM dim_geography
+GROUP BY COALESCE(region, 'Inconnue')
+ORDER BY nombre_geographies DESC;
+
+6. Statut et travaux restant à considérer
+-----------------------------------------
+Terminés et documentés :
+- chargement de fact_ventes ;
+- contrôles du nombre de lignes, des clés obligatoires testées et des doublons ;
+- contrôle du chiffre d'affaires global ;
+- correction SQL du mapping des régions et vérification de sa répartition ;
+- analyses KPI principales par région et par statut.
+
+À vérifier séparément avant une affirmation de validation complète :
+- confirmer que toutes les contraintes de clés étrangères existent et sont validées ;
+- investiguer les 24 lignes Silver sans commande correspondante si une réconciliation
+  source complète est nécessaire ;
+- intégrer le mapping des régions dans le code ETL afin qu'il soit reproductible ;
+- vérifier l'effet des géographies inconnues sur les analyses.
+
+Le chargement et la correction SQL de région ont été réalisés, mais le mapping
+n'est pas encore automatisé dans le code ETL tant que cette modification n'y
+est pas intégrée.
